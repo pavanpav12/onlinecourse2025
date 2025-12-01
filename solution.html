@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stackly Ticketing Tool</title>
+
+<style>
+/* RESET */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:"Poppins",sans-serif;
+}
+
+body{
+  background:#f4f9ff;
+  padding-top:40px;  /* FIX: NAVBAR SPACE */
+  margin-top: 40px;
+}
+
+/* ================= LOADER ================= */
+#loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: indianred;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 9999;
+  animation: fadeOut 1.2s ease 1s forwards;
+}
+
+.loader-content {
+  text-align: center;
+  position: relative;
+}
+
+.pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120px;
+  height: 120px;
+  transform: translate(-50%, -50%);
+  border: 3px solid rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: pulse 1.5s infinite ease-in-out;
+  z-index: 1;
+}
+
+#loader p {
+  color: white;
+  margin-top: 15px;
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+  animation: fadeText 3s infinite alternate;
+}
+
+/* ANIMATIONS */
+@keyframes pulse {
+  0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.7; }
+  70% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.2; }
+  100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.7; }
+}
+
+@keyframes fadeText {
+  from { opacity: 0.5; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; visibility: hidden; }
+}
+
+
+/* ================= NAVBAR ANIMATED ================= */
+.navbar{
+  width:100%;
+  background: linear-gradient(90deg, #4b2cff, #885cff, #c56ffd);
+  color:#fff;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 20px;
+  position:fixed;
+  top:0;
+  left:0;
+  z-index:9999;
+  box-shadow:0 4px 25px rgba(0,0,0,0.25);
+
+  transform: translateY(-40px);
+  opacity:0;
+  animation: navbarDrop 0.8s ease forwards;
+}
+
+@keyframes navbarDrop {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* LOGO animation */
+.logo-area img{
+  height:50px;
+  width:auto;
+  opacity:0;
+  animation: logoFade 1s ease 0.4s forwards;
+}
+
+@keyframes logoFade {
+  from { transform: scale(0.6); opacity:0; }
+  to   { transform: scale(1); opacity:1; }
+}
+
+/* DESKTOP MENU */
+.nav-menu{
+  display:flex;
+  gap:25px;
+  list-style:none;
+}
+
+.nav-menu li a{
+  color:white;
+  text-decoration:none;
+  font-size:16px;
+  padding:8px 12px;
+  border-radius:8px;
+  transition:.3s;
+}
+
+/* GLOW HOVER */
+.nav-menu li a:hover{
+  background:#ffffff26;
+  box-shadow:0 0 10px #ffffff77;
+  transform: translateY(-3px);
+}
+
+/* DROPDOWN */
+.dropdown{
+  position:relative;
+}
+
+.dropdown-menu{
+  position:absolute;
+  top:42px;
+  left:0;
+  background:#0b2447;
+  width:160px;
+  border-radius:8px;
+  list-style:none;
+  padding:10px 0;
+  border:1px solid rgba(255,255,255,0.2);
+  display:none;
+  animation: dropFade .35s ease;
+}
+
+@keyframes dropFade {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.dropdown.open .dropdown-menu{
+  display:block;
+}
+
+/* HAMBURGER */
+.hamburger{
+  display:none;
+  flex-direction:column;
+  gap:5px;
+  cursor:pointer;
+  opacity:0;
+  animation: fadeIn 1s ease 0.5s forwards;
+}
+
+@keyframes fadeIn {
+  to { opacity:1; }
+}
+
+.hamburger span{
+  width:28px;
+  height:3px;
+  background:white;
+  border-radius:4px;
+  transition:.3s;
+}
+
+/* MOBILE MENU */
+@media(max-width:768px){
+
+  .hamburger{
+    display:flex;
+  }
+
+  .nav-menu{
+    position:fixed;
+    top:70px;
+    right:-100%;
+    width:260px;
+    background:#0b2447;
+    height:calc(100vh - 70px);
+    flex-direction:column;
+    padding-top:15px;
+    padding-bottom:30px;
+    box-shadow:-4px 0 18px rgba(0,0,0,0.3);
+    transition:0.4s ease;
+  }
+
+  .nav-menu.active{
+    right:0;
+  }
+
+  .nav-menu li{
+    width:100%;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+    opacity:0;
+    animation: slideIn 0.6s ease forwards;
+  }
+
+  @keyframes slideIn {
+    0% { transform:translateX(50px); opacity:0; }
+    100% { transform:translateX(0); opacity:1; }
+  }
+
+  .nav-menu li a{
+    display:block;
+    width:100%;
+    padding:15px 8px;
+    font-size:18px;
+  }
+
+  .dropdown-menu{
+    position:relative;
+    width:100%;
+    border-radius:0;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== LOADER ===== -->
+<div id="loader">
+  <div class="loader-content">
+    <div class="pulse-ring"></div>
+    <p>Loading Stackly...</p>
+  </div>
+</div>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar">
+
+  <div class="logo-area">
+    <img src="Screenshot (7) (1) (1).webp" alt="Logo">
+  </div>
+
+ <ul class="nav-menu" id="navMenu">
+
+  <li class="dropdown">
+    <a href="#" class="dropdown-btn">Home ▾</a>
+    <ul class="dropdown-menu">
+      <li><a href="index.html">Home 1</a></li>
+      <li><a href="Home2.html">Home 2</a></li>
+    </ul>
+  </li>
+
+  <li><a href="whystackly.html">Why Stackly</a></li>
+  <li><a href="solution.html">Solution</a></li>
+  <li><a href="officecenter.html">Office Center</a></li>
+  <li><a href="placement.html">Placement</a></li>
+  <li class="dropdown">
+    <a href="#" class="dropdown-btn">Profile ▾</a>
+    <ul class="dropdown-menu">
+      <li><a href="about.html">About</a></li>
+      <li><a href="blog.html">Blog</a></li>
+    </ul>
+  </li>
+ <li><a href="contact.html">Contact</a></li>
+<li><a href="signup1.html">Signin</a></li>
+
+</ul>
+
+  <div class="hamburger" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+
+</nav>
+
+<!-- ================= JS ================= -->
+<script>
+/* MOBILE MENU TOGGLE */
+const hamburger = document.getElementById("hamburger");
+const navMenu = document.getElementById("navMenu");
+
+hamburger.addEventListener("click", () => {
+  navMenu.classList.toggle("active");
+});
+
+/* DROPDOWNS OPEN */
+document.querySelectorAll(".dropdown-btn").forEach(btn => {
+  btn.addEventListener("click", function(e){
+    e.preventDefault();
+    this.parentElement.classList.toggle("open");
+  });
+});
+</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stackly – Solutions</title>
+
+<style>
+/* RESET */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:"Poppins",sans-serif;
+}
+body{
+  background:#0d1117;
+  color:#e5e7eb;
+  overflow-x:hidden;
+}
+
+/* SECTION */
+.section{
+  max-width:1200px;
+  margin:auto;
+  padding:45px 20px;
+}
+
+/* TITLES */
+.title{
+  font-size:32px;
+  font-weight:800;
+  text-align:center;
+  background:linear-gradient(120deg,#38bdf8,#a855f7);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.sub-text{
+  text-align:center;
+  color:#94a3af;
+  margin-top:10px;
+  line-height:1.6;
+}
+
+/* HERO FLEX */
+.hero-flex{
+  margin-top:40px;
+  display:flex;
+  flex-direction:column;
+  gap:25px;
+  align-items:center;
+}
+@media(min-width:900px){
+  .hero-flex{
+    flex-direction:row;
+    justify-content:space-between;
+    text-align:left;
+  }
+}
+
+.hero-text{
+  max-width:550px;
+}
+.hero-big{
+  font-size:34px;
+  font-weight:800;
+  background:linear-gradient(120deg,#38bdf8,#a855f7);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.hero-info{
+  margin-top:10px;
+  font-size:15px;
+  line-height:1.6;
+  color:#cbd5f5;
+}
+
+.hero-img{
+  width:100%;
+  max-width:450px;
+  border-radius:18px;
+  box-shadow:0 15px 50px rgba(56,189,248,.3);
+  animation:fadeUp 1s ease;
+}
+
+/* GRID */
+.grid{
+  margin-top:35px;
+  display:grid;
+  gap:22px;
+}
+@media(min-width:900px){
+  .grid{
+    grid-template-columns:repeat(3,1fr);
+  }
+}
+
+/* CARD */
+.card{
+  background:#141b29;
+  padding:20px;
+  border-radius:18px;
+  border:1px solid #334155;
+  animation:fadeUp 1s ease;
+  transition:.3s;
+}
+.card:hover{
+  transform:translateY(-6px);
+  border-color:#38bdf8;
+  box-shadow:0 12px 35px rgba(56,189,248,.25);
+}
+
+.card img{
+  width:100%;
+  height:150px;
+  object-fit:cover;
+  border-radius:14px;
+  margin-bottom:12px;
+}
+
+.card-title{
+  font-size:18px;
+  font-weight:700;
+  color:#38bdf8;
+}
+.card-desc{
+  font-size:14px;
+  margin-top:6px;
+  color:#cbd5f5;
+  line-height:1.6;
+}
+
+/* APPROACH SECTION */
+.approach-box{
+  margin-top:35px;
+  background:#141b29;
+  border:1px solid #334155;
+  padding:26px;
+  border-radius:18px;
+}
+.approach-title{
+  font-size:22px;
+  color:#38bdf8;
+  margin-bottom:14px;
+}
+.list li{
+  list-style:none;
+  margin:8px 0;
+  font-size:14px;
+}
+.list li::before{
+  content:"✔ ";
+  color:#38bdf8;
+}
+
+/* BENEFITS */
+.features-grid{
+  margin-top:35px;
+  display:grid;
+  gap:22px;
+}
+@media(min-width:900px){
+  .features-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+.feature-box{
+  background:#141b29;
+  padding:26px;
+  border-radius:18px;
+  border:1px solid #334155;
+}
+.feature-box img{
+  width:100%;
+  height:160px;
+  object-fit:cover;
+  border-radius:14px;
+  margin-bottom:12px;
+}
+.feature-title{
+  font-size:18px;
+  font-weight:700;
+  color:#38bdf8;
+}
+.feature-desc{
+  margin-top:6px;
+  font-size:14px;
+  color:#cbd5f5;
+  line-height:1.6;
+}
+
+/* CTA */
+.cta{
+  text-align:center;
+  margin-top:45px;
+}
+.cta-title{
+  font-size:28px;
+  font-weight:800;
+  background:linear-gradient(120deg,#38bdf8,#a855f7);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.cta-text{
+  font-size:14px;
+  margin-top:8px;
+  color:#94a3af;
+}
+.cta-btn{
+  margin-top:16px;
+  padding:14px 28px;
+  font-size:15px;
+  font-weight:600;
+  background:linear-gradient(120deg,#38bdf8,#a855f7);
+  border:none;
+  border-radius:12px;
+  color:#020617;
+  cursor:pointer;
+  transition:.3s;
+}
+.cta-btn:hover{
+  transform:translateY(-3px);
+  box-shadow:0 18px 40px rgba(56,189,248,.55);
+}
+
+/* ANIMATION */
+@keyframes fadeUp{
+  from{opacity:0; transform:translateY(30px);}
+  to{opacity:1; transform:translateY(0);}
+}
+</style>
+</head>
+<body>
+
+<!-- TITLE -->
+<div class="section">
+  <h1 class="title">Stackly Solutions</h1>
+  <p class="sub-text">Modern, practical, industry-ready solutions for learners, job seekers & professionals.</p>
+</div>
+
+<!-- HERO SECTION WITH IMAGE -->
+<div class="section hero-flex">
+
+  <div class="hero-text">
+    <h2 class="hero-big">Smart Learning for Real Careers</h2>
+    <p class="hero-info">
+      Stackly offers solutions that help you gain real-world skills through hands-on projects, AI tools, and expert mentorship.
+    </p>
+  </div>
+
+  <img class="hero-img" src="online3.webp">
+</div>
+
+<!-- SOLUTION CARDS WITH IMAGES -->
+<div class="section">
+  <h2 class="title" style="font-size:26px;">Our Key Learning Solutions</h2>
+
+  <div class="grid">
+
+    <div class="card">
+      <img src="ui ux.webp">
+      <h3 class="card-title">Skill Development Programs</h3>
+      <p class="card-desc">Master coding, data, design & business through a structured, real-world approach.</p>
+    </div>
+
+    <div class="card">
+      <img src="pythondev.webp">
+      <h3 class="card-title">Project-Based Labs</h3>
+      <p class="card-desc">Build real software, dashboards, designs & apps exactly like tech companies do.</p>
+    </div>
+
+    <div class="card">
+      <img src="pythondev.webp">
+      <h3 class="card-title">Career Growth Support</h3>
+      <p class="card-desc">Resume building, mock interviews, job preparation & personalized guidance.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- APPROACH -->
+<div class="section">
+  <div class="approach-box">
+    <h3 class="approach-title">Stackly’s Smart Learning Approach</h3>
+
+    <ul class="list">
+      <li>AI guidance for faster understanding.</li>
+      <li>Assignments & quizzes after each lesson.</li>
+      <li>Weekly mentor calls for deep learning.</li>
+      <li>Portfolio-focused project tasks.</li>
+      <li>Job-ready training content.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- BENEFITS WITH IMAGES -->
+<div class="section">
+  <h2 class="title" style="font-size:26px;">Benefits of Stackly Learning</h2>
+
+  <div class="features-grid">
+
+    <div class="feature-box">
+      <img src="online2.webp">
+      <h3 class="feature-title">Learn Faster</h3>
+      <p class="feature-desc">Interactive lessons + practical tasks help you understand quickly.</p>
+    </div>
+
+    <div class="feature-box">
+      <img src="online3.webp">
+      <h3 class="feature-title">Build Real Projects</h3>
+      <p class="feature-desc">You graduate with real portfolio projects companies want.</p>
+    </div>
+
+    <div class="feature-box">
+      <img src="online4.webp">
+      <h3 class="feature-title">Expert Guidance</h3>
+      <p class="feature-desc">Mentors guide your progress and ensure you're career-ready.</p>
+    </div>
+
+    <div class="feature-box">
+      <img src="online7.webp">
+      <h3 class="feature-title">Grow Your Career</h3>
+      <p class="feature-desc">Job readiness + interview training helps you get hired.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="section cta">
+  <h2 class="cta-title">Explore Stackly Solutions</h2>
+  <p class="cta-text">Start learning smarter today and build the skills companies want.</p>
+  <button class="cta-btn" onclick="location.href='4041.html'">Explore Now</button>
+</div>
+
+</body>
+</html>
+
+<style>
+  /* ================= FOOTER START ================= */
+
+footer{
+ background: linear-gradient(180deg, #0d0d23, #1f1f48, #3a3a7b);
+
+
+
+
+
+
+  color:#fff;
+  padding:70px 6%;
+  margin-top:80px;
+  position:relative;
+  overflow:hidden;
+  font-family:"Poppins",sans-serif;
+}
+
+/* Soft glow */
+footer::before{
+  content:"";
+  position:absolute;
+  top:-120px;
+  left:0;
+  width:120%;
+  height:220px;
+ 
+}
+
+
+/* GRID LAYOUT FIXED */
+.footer-container{
+  max-width:1200px;
+  margin:auto;
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap:50px;
+  position:relative;
+  z-index:2;
+}
+
+/* LEFT */
+.footer-left img{
+  height:58px;
+  margin-bottom:12px;
+  object-fit:contain;
+}
+
+.footer-left p{
+  opacity:0.85;
+  margin:12px 0 18px;
+  line-height:1.6;
+  font-size:14px;
+  max-width:280px;
+}
+
+/* SOCIAL ICONS */
+.social-icons{
+  display:flex;
+  gap:14px;
+  margin-top:12px;
+}
+.social-icons a{
+  height:42px;width:42px;
+  border-radius:50%;
+  background:#ffffff20;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  transition:.3s;
+}
+.social-icons a:hover{
+  background:#00eaff;
+  transform:translateY(-6px) scale(1.1);
+}
+.social-icons img{
+  height:20px;width:20px;
+}
+
+/* CENTER LINKS */
+.footer-links h3,
+.footer-contact h3{
+  margin-bottom:16px;
+  font-size:22px;
+  color:#00eaff;
+}
+
+.footer-links a{
+  display:block;
+  text-decoration:none;
+  color:#cbd5e1;
+  margin:6px 0;
+  font-size:15px;
+  transition:.3s;
+}
+.footer-links a:hover{
+  transform:translateX(6px);
+  color:#00eaff;
+}
+
+/* RIGHT CONTACT */
+.footer-contact p{
+  margin:6px 0;
+  opacity:.9;
+  font-size:15px;
+}
+
+/* SUBSCRIBE */
+.subscribe-box{
+  margin-top:16px;
+  display:flex;
+  width:100%;
+  max-width:320px;
+}
+.subscribe-box input{
+  flex:1;
+  padding:12px 14px;
+  background:#ffffff12;
+  border:none;
+  border-radius:6px 0 0 6px;
+  color:white;
+  outline:none;
+}
+.subscribe-box button{
+  padding:12px 20px;
+  background:#00eaff;
+  border:none;
+  color:#001;
+  font-weight:700;
+  border-radius:0 6px 6px 0;
+  cursor:pointer;
+}
+
+/* BOTTOM COPYRIGHT */
+.footer-bottom{
+  text-align:center;
+  margin-top:40px;
+  padding-top:18px;
+  border-top:1px solid #1e293b;
+  opacity:.8;
+  font-size:14px;
+}
+
+/* MOBILE VIEW FIX */
+/* MOBILE VIEW FIX */
+@media(max-width:900px){
+  
+  .footer-container{
+    grid-template-columns:1fr;
+    gap:45px;
+    text-align:center;
+  }
+
+  /* Left section */
+  .footer-left p{
+    margin:auto;
+  }
+
+  .social-icons{
+    justify-content:center;
+  }
+
+  /* QUICK LINKS */
+  .footer-links{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;   /* center block */
+  }
+
+  .footer-links h3{
+    text-align:center;
+    width:100%;
+  }
+
+  .footer-links a{
+    width:100%;
+    max-width:220px;      /* keeps good width */
+    text-align:start;     /* TEXT LEFT */
+    margin:4px 0;
+    padding-left:0;
+    margin-left: 130px;
+  }
+
+  /* Contact section */
+  .footer-contact{
+    text-align:center;
+  }
+
+  /* Subscribe input responsiveness */
+  .subscribe-box{
+    flex-direction:column;
+    max-width:none;
+  }
+  .subscribe-box input{
+    width:100%;
+    border-radius:6px;
+    margin-bottom:10px;
+  }
+  .subscribe-box button{
+    width:100%;
+    border-radius:6px;
+  }
+}
+
+</style>
+<footer>
+  <div class="footer-container">
+
+    <!-- LEFT -->
+    <div class="footer-left">
+      <img src="Screenshot (7) (1) (1).webp" alt="Company Logo">
+      <p>Stackly provides unmatched placement support through dedicated training, industry mentorship, and direct hiring opportunities.</p>
+</p>
+
+      <div class="social-icons">
+        <a href="4041.html"><img src="facebook.webp" alt="Facebook"></a>
+        <a href="4041.html"><img src="twitter-logo.webp" alt="Twitter"></a>
+        <a href="4041.html"><img src="linkedin.webp" alt="LinkedIn"></a>
+        <a href="4041.html"><img src="instagram.webp" alt="Instagram"></a>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="footer-links">
+      <h3>Quick Links</h3>
+      <a href="home2.html">Home</a>
+      <a href="whystackly.html">Why Stackly</a>
+      <a href="solution.html">Solution</a>
+      <a href="officecenter.html">Office Center</a>
+      <a href="placement.html">Placement</a>
+      <a href="about.html">About</a>
+      <a href="blog.html">Blog</a>
+      <a href="contact.html">Contact</a>
+       <a href="signup1.html">Signin</a>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="footer-contact">
+      <h3>Contact Us</h3>
+      <p>📍 Bengaluru, Karnataka</p>
+      <p>📞 +91 98765 43210</p>
+      <p>✉ support@stacklycourses.com</p>
+
+      <form action="4041.html" method="get" class="subscribe-box">
+        <input type="email" name="email" placeholder="Enter your email" required>
+        <button type="submit">Join</button>
+      </form>
+    </div>
+
+  </div>
+
+  <p class="footer-bottom">© 2025 Stackly Social Course. All Rights Reserved.</p>
+</footer>
+
+<!-- ================= FOOTER END ================= -->

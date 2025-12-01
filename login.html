@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stackly – Sign In</title>
+
+<style>
+/* RESET */
+*{
+  margin:0; padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+body{
+  background:radial-gradient(circle at top,#0d1117,#020617 70%);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  overflow:hidden;
+}
+
+/* CONTAINER */
+.auth-box{
+  width:100%;
+  max-width:420px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.15);
+  padding:32px;
+  border-radius:20px;
+  backdrop-filter:blur(14px);
+  box-shadow:0 15px 45px rgba(0,0,0,.35);
+  animation:fadeUp 1s ease;
+}
+
+/* TITLE */
+.auth-title{
+  font-size:28px;
+  font-weight:800;
+  text-align:center;
+  background:linear-gradient(120deg,#38bdf8,#a855f7);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.auth-sub{
+  text-align:center;
+  font-size:13px;
+  color:#94a3b8;
+  margin-top:6px;
+  margin-bottom:22px;
+}
+
+/* INPUT BOX */
+.input-group{
+  margin-bottom:20px;
+  position:relative;
+}
+.input-group label{
+  font-size:13px;
+  color:#e5e7eb;
+}
+.input-group input{
+  width:100%;
+  padding:12px 40px 12px 14px;
+  margin-top:6px;
+  background:#0f172a;
+  border:1px solid #334155;
+  border-radius:10px;
+  color:white;
+  outline:none;
+  font-size:14px;
+  transition:.25s;
+}
+.input-group input:focus{
+  border-color:#38bdf8;
+  box-shadow:0 0 10px rgba(56,189,248,.4);
+}
+
+/* PASSWORD SHOW/HIDE */
+.eye-icon{
+  position:absolute;
+  right:14px;
+  bottom:12px;
+  font-size:17px;
+  color:#a4b1c8;
+  cursor:pointer;
+  transition:.3s;
+}
+.eye-icon:hover{
+  color:#38bdf8;
+}
+
+/* SIGN IN BUTTON */
+.btn{
+  width:100%;
+  padding:12px 0;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  background:linear-gradient(120deg,#38bdf8,#a855f7);
+  color:#020617;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+  transition:.3s;
+}
+.btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 16px 35px rgba(56,189,248,.5);
+}
+
+/* OPTIONS */
+.bottom-links{
+  margin-top:18px;
+  text-align:center;
+  font-size:13px;
+}
+.bottom-links a{
+  color:#38bdf8;
+  text-decoration:none;
+  transition:.3s;
+}
+.bottom-links a:hover{
+  color:#a855f7;
+}
+
+/* ERROR SHAKE */
+.shake{
+  animation:shake .3s ease;
+}
+@keyframes shake{
+  0%{transform:translateX(0);}
+  33%{transform:translateX(-6px);}
+  66%{transform:translateX(6px);}
+  100%{transform:translateX(0);}
+}
+
+/* FADEUP ANIMATION */
+@keyframes fadeUp{
+  from{opacity:0; transform:translateY(40px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+/* MOBILE FIX */
+@media(max-width:500px){
+  .auth-box{
+    padding:20px;
+  }
+  .auth-title{
+    font-size:24px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="auth-box">
+
+  <h1 class="auth-title">Welcome Back</h1>
+  <p class="auth-sub">Sign in to continue learning on Stackly</p>
+
+  <!-- EMAIL -->
+  <div class="input-group">
+    <label>Email Address</label>
+    <input type="email" id="email" placeholder="Enter your email">
+  </div>
+
+  <!-- PASSWORD -->
+  <div class="input-group">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Enter your password">
+    <span class="eye-icon" onclick="togglePass()">👁</span>
+  </div>
+
+  <!-- BUTTON -->
+  <button class="btn" onclick="validateLogin()">Sign In</button>
+
+  <!-- LINKS -->
+  <div class="bottom-links">
+    <p><a href="404.html">Forgot Password?</a></p>
+    <p>Don't have an account? <a href="signup.html">Create one</a></p>
+  </div>
+
+</div>
+
+<script>
+function togglePass(){
+  let pass = document.getElementById("password");
+  pass.type = pass.type === "password" ? "text" : "password";
+}
+
+// SIMPLE VALIDATION + SHAKE ANIMATION + 404 REDIRECT
+function validateLogin(){
+  let email = document.getElementById("email");
+  let password = document.getElementById("password");
+  let box = document.querySelector(".auth-box");
+
+  if(email.value.trim() === "" || password.value.trim() === ""){
+    box.classList.add("shake");
+    setTimeout(()=> box.classList.remove("shake"), 400);
+    return;
+  }
+
+  // Redirect to 404 page
+  window.location.href = "404.html";
+}
+</script>
+
+</body>
+</html>
